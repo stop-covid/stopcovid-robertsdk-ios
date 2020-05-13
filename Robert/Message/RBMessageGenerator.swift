@@ -21,10 +21,10 @@ final class RBMessageGenerator {
     
     private static func generateMessage(for epoch: RBEpoch, ntpTimestamp: Int) throws -> Data {
         guard let ecc = Data(base64Encoded: epoch.ecc) else {
-            throw NSError.localizedError(message: "Malformed ECC in epoch", code: 0)
+            throw NSError.rbLocalizedError(message: "Malformed ECC in epoch", code: 0)
         }
         guard let ebid = Data(base64Encoded: epoch.ebid) else {
-            throw NSError.localizedError(message: "Malformed EBID in epoch", code: 0)
+            throw NSError.rbLocalizedError(message: "Malformed EBID in epoch", code: 0)
         }
         let time: UInt16 = UInt16(truncating: NSNumber(integerLiteral: ntpTimestamp)).bigEndian
         let data: Data = withUnsafeBytes(of: time) { Data($0) }
@@ -46,7 +46,7 @@ final class RBMessageGenerator {
     
     private static func generateStatusMessageMAC(key: Data, epoch: RBEpoch, timeData: Data) throws -> Data {
         guard let ebid = Data(base64Encoded: epoch.ebid) else {
-            throw NSError.localizedError(message: "Malformed EBID in epoch", code: 0)
+            throw NSError.rbLocalizedError(message: "Malformed EBID in epoch", code: 0)
         }
         let totalMessage: Data = Data([RBConstants.Prefix.c2]) + ebid + timeData
         return totalMessage.hmac(key: key)
@@ -62,7 +62,7 @@ final class RBMessageGenerator {
     
     private static func generateUnregisterMessageMAC(key: Data, epoch: RBEpoch, timeData: Data) throws -> Data {
         guard let ebid = Data(base64Encoded: epoch.ebid) else {
-            throw NSError.localizedError(message: "Malformed EBID in epoch", code: 0)
+            throw NSError.rbLocalizedError(message: "Malformed EBID in epoch", code: 0)
         }
         let totalMessage: Data = Data([RBConstants.Prefix.c3]) + ebid + timeData
         return totalMessage.hmac(key: key)
@@ -78,7 +78,7 @@ final class RBMessageGenerator {
     
     private static func generateDeleteExposureHistoryMessageMAC(key: Data, epoch: RBEpoch, timeData: Data) throws -> Data {
         guard let ebid = Data(base64Encoded: epoch.ebid) else {
-            throw NSError.localizedError(message: "Malformed EBID in epoch", code: 0)
+            throw NSError.rbLocalizedError(message: "Malformed EBID in epoch", code: 0)
         }
         let totalMessage: Data = Data([RBConstants.Prefix.c4]) + ebid + timeData
         return totalMessage.hmac(key: key)

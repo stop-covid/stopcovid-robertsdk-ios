@@ -12,8 +12,8 @@ import UIKit
 
 struct RBEpoch: RBStorable {
     
-    var id: Int
-    var ebid: String
-    var ecc: String
+    let id: Int
+    let ebid: String
+    let ecc: String
     
 }

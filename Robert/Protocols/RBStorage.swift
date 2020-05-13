@@ -35,7 +35,7 @@ protocol RBStorage {
     func isProximityActivated() -> Bool
     
     // MARK: - Local Proximity -
-    func save(localProximities: [RBLocalProximity])
+    func save(localProximity: RBLocalProximity)
     func getLocalProximityList() -> [RBLocalProximity]
     
     // MARK: - Status: isAtRisk -
@@ -54,13 +54,9 @@ protocol RBStorage {
     func save(isSick: Bool)
     func isSick() -> Bool
     
-    // MARK: - Positive to symptoms -
-    func save(positiveToSymptoms: Bool?)
-    func positiveToSymptoms() -> Bool?
-    
     // MARK: - Data cleraing -
     func clearLocalEpochs()
     func clearLocalProximityList()
-    func clearAll()
+    func clearAll(includingDBKey: Bool)
     
 }

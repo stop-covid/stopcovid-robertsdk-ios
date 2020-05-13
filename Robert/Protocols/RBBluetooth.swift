@@ -14,7 +14,7 @@ protocol RBBluetooth {
 
     func start(helloMessageCreationHandler: @escaping () -> Data,
                ebidExtractionHandler: @escaping (_ data: Data) -> Data,
-               didReceiveProximity: @escaping (_ proximities: [RBReceivedProximity]) -> ())
+               didReceiveProximity: @escaping (_ proximity: RBReceivedProximity) -> ())
     func stop()
     
 }

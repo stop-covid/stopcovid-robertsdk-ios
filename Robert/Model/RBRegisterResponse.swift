@@ -12,8 +12,8 @@ import UIKit
 
 struct RBRegisterResponse {
 
-    var key: String
-    var epochs: [RBEpoch]
-    var timeStart: Int
+    let key: String
+    let epochs: [RBEpoch]
+    let timeStart: Int
     
 }

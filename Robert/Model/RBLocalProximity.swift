@@ -12,12 +12,12 @@ import UIKit
 
 struct RBLocalProximity {
 
-    var ecc: String
-    var ebid: String
-    var mac: String
-    var timeFromHelloMessage: UInt16
-    var timeCollectedOnDevice: Int
-    var rssiRaw: Int
-    var rssiCalibrated: Int
+    let ecc: String
+    let ebid: String
+    let mac: String
+    let timeFromHelloMessage: UInt16
+    let timeCollectedOnDevice: Int
+    let rssiRaw: Int
+    let rssiCalibrated: Int
 
 }

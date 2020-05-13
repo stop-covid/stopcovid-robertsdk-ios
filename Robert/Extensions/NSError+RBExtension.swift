@@ -2,19 +2,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-//  RBReceivedProximity.swift
+//  NSError+RBExtension.swift
 //  STOP-COVID
 //
 //  Created by Lunabee Studio / Date - 29/04/2020 - for the STOP-COVID project.
 //
 
-import UIKit
+import Foundation
 
-struct RBReceivedProximity {
-
-    let data: Data
-    let timeCollectedOnDevice: Int
-    let rssiRaw: Int
-    let rssiCalibrated: Int
-
+extension NSError {
+    
+    static func rbLocalizedError(message: String, code: Int) -> Error {
+        return NSError(domain: "Robert-SDK", code: code, userInfo: [NSLocalizedDescriptionKey: message])
+    }
+    
 }

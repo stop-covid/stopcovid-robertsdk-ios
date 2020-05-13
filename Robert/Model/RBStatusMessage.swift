@@ -12,8 +12,8 @@ import UIKit
 
 struct RBStatusMessage {
 
-    var ebid: String
-    var time: String
-    var mac: String
+    let ebid: String
+    let time: String
+    let mac: String
     
 }

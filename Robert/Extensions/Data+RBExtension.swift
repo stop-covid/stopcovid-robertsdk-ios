@@ -24,5 +24,10 @@ extension Data {
         CCHmac(CCHmacAlgorithm(kCCHmacAlgSHA256), keyString, keyLength, string, stringLength, &result)
         return Data(result)
     }
+    
+    mutating func wipeData() {
+        guard let range = Range(NSMakeRange(0, count)) else { return }
+        resetBytes(in: range)
+    }
 
 }

@@ -9,8 +9,8 @@ import UIKit
 
 struct RBStatusResponse {
 
-    var atRisk: Bool
-    var lastExposureTimeFrame: Int?
-    var epochs: [RBEpoch]
+    let atRisk: Bool
+    let lastExposureTimeFrame: Int?
+    let epochs: [RBEpoch]
     
 }

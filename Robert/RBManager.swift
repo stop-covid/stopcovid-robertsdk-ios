@@ -37,10 +37,7 @@ final class RBManager {
         set { storage.saveLastStatusReceivedDate(newValue) }
     }
     var currentEpoch: RBEpoch? { storage.getCurrentEpoch() }
-    var localProximityList: [RBLocalProximity] {
-        get { storage.getLocalProximityList() }
-        set { storage.save(localProximities: newValue) }
-    }
+    var localProximityList: [RBLocalProximity] { storage.getLocalProximityList() }
     
     func start(server: RBServer, storage: RBStorage, bluetooth: RBBluetooth) {
         self.server = server
@@ -69,26 +66,22 @@ final class RBManager {
             }
         }, ebidExtractionHandler: { helloMessage -> Data in
             RBMessageParser.getEbid(from: helloMessage) ?? Data()
-        }, didReceiveProximity: { [weak self] receivedProximities in
-            let localProximities: [RBLocalProximity] = receivedProximities.compactMap {
-                let eccString: String? = RBMessageParser.getEcc(from: $0.data)?.base64EncodedString()
-                let ebidString: String? = RBMessageParser.getEbid(from: $0.data)?.base64EncodedString()
-                let timeInt: UInt16? = RBMessageParser.getTime(from: $0.data)
-                let macString: String? = RBMessageParser.getMac(from: $0.data)?.base64EncodedString()
-                guard let ecc = eccString, let ebid = ebidString, let time = timeInt, let mac = macString else {
-                    print("Proximity message ignored because it is malformed.")
-                    return nil
-                }
-                let localProximity: RBLocalProximity = RBLocalProximity(ecc: ecc,
-                                                                        ebid: ebid,
-                                                                        mac: mac,
-                                                                        timeFromHelloMessage: time,
-                                                                        timeCollectedOnDevice: $0.timeCollectedOnDevice,
-                                                                        rssiRaw: $0.rssiRaw,
-                                                                        rssiCalibrated: $0.rssiCalibrated)
-                return localProximity
+        }, didReceiveProximity: { [weak self] receivedProximity in
+            let eccString: String? = RBMessageParser.getEcc(from: receivedProximity.data)?.base64EncodedString()
+            let ebidString: String? = RBMessageParser.getEbid(from: receivedProximity.data)?.base64EncodedString()
+            let timeInt: UInt16? = RBMessageParser.getTime(from: receivedProximity.data)
+            let macString: String? = RBMessageParser.getMac(from: receivedProximity.data)?.base64EncodedString()
+            guard let ecc = eccString, let ebid = ebidString, let time = timeInt, let mac = macString else {
+                return
             }
-            self?.storage.save(localProximities: localProximities)
+            let localProximity: RBLocalProximity = RBLocalProximity(ecc: ecc,
+                                                                    ebid: ebid,
+                                                                    mac: mac,
+                                                                    timeFromHelloMessage: time,
+                                                                    timeCollectedOnDevice: receivedProximity.timeCollectedOnDevice,
+                                                                    rssiRaw: receivedProximity.rssiRaw,
+                                                                    rssiCalibrated: receivedProximity.rssiCalibrated)
+            self?.storage.save(localProximity: localProximity)
         })
     }
     
@@ -99,20 +92,16 @@ final class RBManager {
     private func loadKey() {
         if let key = storage.getKey() {
             ka = key
-            print("Storage - Shared Key loaded")
-        } else {
-            print("Storage - No shared key to load")
         }
     }
     
     private func wipeKey() {
-        ka?.wipe()
+        ka?.wipeData()
     }
     
     @objc private  func applicationWillTerminate() {
         wipeKey()
         storage.stop()
-        print("Keys wiping - Did wipe shared key and db key")
     }
     
 }
@@ -122,11 +111,11 @@ extension RBManager {
     
     func status(_ completion: @escaping (_ error: Error?) -> ()) {
         guard let ka = ka else {
-            completion(NSError.localizedError(message: "No key found to make request", code: 0))
+            completion(NSError.rbLocalizedError(message: "No key found to make request", code: 0))
             return
         }
         guard let epoch = storage.getCurrentEpoch() else {
-            completion(NSError.localizedError(message: "No epoch found to make request", code: 0))
+            completion(NSError.rbLocalizedError(message: "No epoch found to make request", code: 0))
             return
         }
         do {
@@ -199,11 +188,11 @@ extension RBManager {
             return
         }
         guard let ka = ka else {
-            completion(NSError.localizedError(message: "No key found to make request", code: 0))
+            completion(NSError.rbLocalizedError(message: "No key found to make request", code: 0))
             return
         }
         guard let epoch = storage.getCurrentEpoch() else {
-            completion(NSError.localizedError(message: "No epoch found to make request", code: 0))
+            completion(NSError.rbLocalizedError(message: "No epoch found to make request", code: 0))
             return
         }
         do {
@@ -224,17 +213,17 @@ extension RBManager {
     
     func deleteExposureHistory(_ completion: @escaping (_ error: Error?) -> ()) {
         guard let ka = ka else {
-            completion(NSError.localizedError(message: "No key found to make request", code: 0))
+            completion(NSError.rbLocalizedError(message: "No key found to make request", code: 0))
             return
         }
         guard let epoch = storage.getCurrentEpoch() else {
-            completion(NSError.localizedError(message: "No epoch found to make request", code: 0))
+            completion(NSError.rbLocalizedError(message: "No epoch found to make request", code: 0))
             return
         }
         do {
             let ntpTimestamp: Int = Int(Date().timeIntervalSince1900)
             let statusMessage: RBDeleteExposureHistoryMessage = try RBMessageGenerator.generateDeleteExposureHistoryMessage(for: epoch, ntpTimestamp: ntpTimestamp, key: ka)
-            server.unregister(ebid: statusMessage.ebid, time: statusMessage.time, mac: statusMessage.mac, completion: { error in
+            server.deleteExposureHistory(ebid: statusMessage.ebid, time: statusMessage.time, mac: statusMessage.mac, completion: { error in
                 if let error = error {
                     completion(error)
                 } else {
@@ -260,12 +249,12 @@ extension RBManager {
     }
     
     func clearAllLocalData() {
-        storage.clearAll()
+        storage.clearAll(includingDBKey: false)
         clearKey()
     }
     
     func clearKey() {
-        ka?.wipe()
+        ka?.wipeData()
         ka = nil
     }
     
@@ -275,7 +264,7 @@ extension RBManager {
     
     private func processRegisterResponse(_ response: RBRegisterResponse) throws {
         guard let data = Data(base64Encoded: response.key) else {
-            throw NSError.localizedError(message: "The provided key is not a valid base64 string", code: 0)
+            throw NSError.rbLocalizedError(message: "The provided key is not a valid base64 string", code: 0)
         }
         storage.save(key: data)
         ka = data
@@ -283,7 +272,6 @@ extension RBManager {
         if !response.epochs.isEmpty {
             clearLocalEpochs()
             storage.save(epochs: response.epochs)
-            print("Stored \(response.epochs.count) epochs")
         }
     }
     
@@ -293,7 +281,6 @@ extension RBManager {
         if !response.epochs.isEmpty {
             clearLocalEpochs()
             storage.save(epochs: response.epochs)
-            print("Stored \(response.epochs.count) epochs")
         }
         lastStatusReceivedDate = Date()
     }
